@@ -49,6 +49,7 @@ from .utils import (
     remove_duplicates,
 )
 
+import youtube
 
 OPENEDX_SITES = {
     'edx': {
@@ -644,14 +645,15 @@ def download_unit(unit, args, target_dir, filename_prefix, headers):
     with filename_prefix
     """
     if len(unit.videos) == 1:
-        download_video(unit.videos[0], args, target_dir, filename_prefix,
-                       headers)
+        #download_video(unit.videos[0], args, target_dir, filename_prefix, headers)
+        youtube.insert_video(unit.videos[0].video_youtube_url.split('=')[1], youtube.playlist_id)	
     else:
         # we change the filename_prefix to avoid conflicts when downloading
         # subtitles
         for i, video in enumerate(unit.videos, 1):
             new_prefix = filename_prefix + ('-%02d' % i)
-            download_video(video, args, target_dir, new_prefix, headers)
+            #download_video(video, args, target_dir, new_prefix, headers)
+            youtube.insert_video(video.video_youtube_url.split('=')[1], youtube.playlist_id)
 
     res_downloads = _build_url_downloads(unit.resources_urls, target_dir,
                                          filename_prefix)
@@ -670,6 +672,17 @@ def download(args, selections, all_units, headers):
 
     for selected_course, selected_sections in selections.items():
         coursename = directory_name(selected_course.name)
+	course_id = selected_course.id.split('+')
+        if len(course_id) == 1:
+            course_id = course_id[0]
+        else:
+            course_id = course_id[1]
+	course_id = course_id.split("/")
+        if len(course_id) == 1:
+            course_id = course_id[0]
+        else:
+            course_id = course_id[1]
+        youtube.playlist_id = youtube.create_playlist(course_id+' '+coursename.replace('_',' '),'Complete. '+selected_course.url)
         for selected_section in selected_sections:
             section_dirname = "%02d-%s" % (selected_section.position,
                                            selected_section.name)
